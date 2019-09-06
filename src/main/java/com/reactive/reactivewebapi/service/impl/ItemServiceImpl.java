@@ -1,11 +1,12 @@
-package com.reactive.reactivewebapi.service;
+package com.reactive.reactivewebapi.service.impl;
 
+import com.reactive.reactivewebapi.apiHandler.ItemServiceApiErrorHandler;
 import com.reactive.reactivewebapi.common.dto.ItemResponseDTO;
 import com.reactive.reactivewebapi.configuration.ConfigurationService;
+import com.reactive.reactivewebapi.service.ItemService;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     ConfigurationService configurationService;
+
+    @Autowired
+    ItemServiceApiErrorHandler itemServiceApiErrorHandler;
 
     @Override
     public Observable<ItemResponseDTO> getItemDetails(Long itemId) {
@@ -44,12 +48,7 @@ public class ItemServiceImpl implements ItemService {
 
         return Observable.<ItemResponseDTO>create(source)
                 .doOnNext(c -> log.info("Item details were retrieved successfully."))
-                .onErrorReturn(new Function<Throwable, ItemResponseDTO>() {
-                    @Override
-                    public ItemResponseDTO apply(Throwable throwable) {
-                        return new ItemResponseDTO();
-                    }
-                })
+                .onErrorReturn(itemServiceApiErrorHandler)
                 .subscribeOn(Schedulers.io());
     }
 }

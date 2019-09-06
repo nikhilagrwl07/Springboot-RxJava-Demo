@@ -1,10 +1,11 @@
-package com.reactive.reactivewebapi.service;
+package com.reactive.reactivewebapi.service.impl;
 
+import com.reactive.reactivewebapi.apiHandler.ShippingServiceApiErrorHandler;
 import com.reactive.reactivewebapi.common.dto.ShippingResponseDTO;
 import com.reactive.reactivewebapi.configuration.ConfigurationService;
+import com.reactive.reactivewebapi.service.ShippingService;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class ShippingServiceImpl implements ShippingService {
 
     @Autowired
     private ConfigurationService configurationService;
+
+    @Autowired
+    ShippingServiceApiErrorHandler shippingServiceApiErrorHandler;
 
     @Override
     public Observable<ShippingResponseDTO> getShippingDetails(Long itemId) {
@@ -39,13 +43,11 @@ public class ShippingServiceImpl implements ShippingService {
 
         return Observable.<ShippingResponseDTO>create(source)
                 .doOnNext(c -> log.info("Shipping details were retrieved successfully."))
-                .onErrorReturn(new Function<Throwable, ShippingResponseDTO>() {
-                    @Override
-                    public ShippingResponseDTO apply(Throwable throwable) {
-                        return new ShippingResponseDTO();
-                    }
-                })
+                .onErrorReturn(shippingServiceApiErrorHandler)
                 .subscribeOn(Schedulers.io());
 
     }
 }
+
+
+//log.info("Observer 1 : {} on {}",  shippingResponseDTO.getId(), LocalTime.now()));

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.URI;
 import java.util.List;
@@ -46,17 +47,23 @@ public class BookController {
     }
 
     @GetMapping
-    public Single<ResponseEntity<BaseWebResponse<List<BookWebResponse>>>> getAllBooks(
+    public DeferredResult<ResponseEntity<BaseWebResponse<List<BookWebResponse>>>> getAllBooks(
             @RequestParam(value = "limit", defaultValue = "5") int limit,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "includeShipping", defaultValue = "false") boolean shippingInfo,
             @RequestParam(value = "includeInvoice", defaultValue = "false") boolean invoiceInfo)
 
     {
-        return bookService.getAllBooks(limit, page, shippingInfo, invoiceInfo)
+        log.info("Started processing asynchronous request");
+        final DeferredResult<ResponseEntity<BaseWebResponse<List<BookWebResponse>>>> deferredResult = new DeferredResult<>();
+
+        ResponseEntity<BaseWebResponse<List<BookWebResponse>>> baseWebResponseResponseEntity = bookService.getAllBooks(limit, page, shippingInfo, invoiceInfo)
                 .subscribeOn(Schedulers.io())
-                .map(books -> ResponseEntity
-                        .ok((BaseWebResponse.successWithData(convertToWebResponse(books)))));
+                .map(books -> ResponseEntity.ok((BaseWebResponse.successWithData(convertToWebResponse(books)))))
+                .blockingGet();
+
+        deferredResult.setResult(baseWebResponseResponseEntity);
+        return deferredResult;
     }
 
     private List<BookWebResponse> convertToWebResponse(List<ItemDTO> items) {

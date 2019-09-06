@@ -10,6 +10,7 @@ import com.reactive.reactivewebapi.entity.Book;
 import com.reactive.reactivewebapi.exception.BookNotFoundException;
 import com.reactive.reactivewebapi.respository.AuthorRepository;
 import com.reactive.reactivewebapi.respository.BookRepository;
+import com.reactive.reactivewebapi.service.impl.BookServiceImpl;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 import org.junit.Before;
@@ -136,10 +137,15 @@ public class BookServiceImplTest {
         testObserver.awaitTerminalEvent();
 
         // verify
-        testObserver.assertValue(bookResponses -> bookResponses.get(0).getId().equals(
-                Long.valueOf(firstBookDto.getId()))
+        testObserver.assertValue(bookResponses ->
+                (bookResponses.get(0).getId().equals(Long.valueOf(firstBookDto.getId()))
                 &&
-                bookResponses.get(1).getId().equals(Long.valueOf(secondBookDto.getId())));
+                bookResponses.get(1).getId().equals(Long.valueOf(secondBookDto.getId())))
+                ||
+                (bookResponses.get(0).getId().equals(Long.valueOf(secondBookDto.getId()))
+                &&
+                bookResponses.get(1).getId().equals(Long.valueOf(firstBookDto.getId())))
+                );
 
 
         verify(bookRepository, times(1)).findAll(any(PageRequest.class));

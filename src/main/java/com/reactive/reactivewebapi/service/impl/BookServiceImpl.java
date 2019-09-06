@@ -1,4 +1,4 @@
-package com.reactive.reactivewebapi.service;
+package com.reactive.reactivewebapi.service.impl;
 
 import com.reactive.reactivewebapi.common.dto.InvoiceResponseDTO;
 import com.reactive.reactivewebapi.common.dto.ItemDTO;
@@ -12,9 +12,14 @@ import com.reactive.reactivewebapi.exception.AuthorNotFoundException;
 import com.reactive.reactivewebapi.exception.BookNotFoundException;
 import com.reactive.reactivewebapi.respository.AuthorRepository;
 import com.reactive.reactivewebapi.respository.BookRepository;
+import com.reactive.reactivewebapi.service.BookService;
+import com.reactive.reactivewebapi.service.InvoiceService;
+import com.reactive.reactivewebapi.service.ItemService;
+import com.reactive.reactivewebapi.service.ShippingService;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class BookServiceImpl implements BookService {
 
@@ -69,15 +75,21 @@ public class BookServiceImpl implements BookService {
     public Single<List<ItemDTO>> getAllBooks(int limit, int page, boolean shippingInfo, boolean invoiceInfo) {
 
         return Single.create(emitter -> {
+
+            long startTime = System.currentTimeMillis();
             List<Book> allBooks = bookRepository.findAll(PageRequest.of(page, limit)).getContent();
 
             List<ItemDTO> allItems = new ArrayList<>();
 
-            allBooks.forEach(book -> {
+            allBooks.parallelStream().forEach(book -> {
                 ItemDTO itemDTO = extractItemDetails(shippingInfo, invoiceInfo, book);
                 allItems.add(itemDTO);
             });
+
             emitter.onSuccess(allItems);
+            long endTime = System.currentTimeMillis();
+            long executeTime = endTime - startTime;
+            log.info("Request take time: {} milliseconds", executeTime);
         });
     }
 

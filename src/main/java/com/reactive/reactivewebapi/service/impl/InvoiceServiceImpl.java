@@ -1,11 +1,11 @@
-package com.reactive.reactivewebapi.service;
+package com.reactive.reactivewebapi.service.impl;
 
+import com.reactive.reactivewebapi.apiHandler.InvoiceServiceApiErrorHandler;
 import com.reactive.reactivewebapi.common.dto.InvoiceResponseDTO;
-import com.reactive.reactivewebapi.common.dto.ShippingResponseDTO;
 import com.reactive.reactivewebapi.configuration.ConfigurationService;
+import com.reactive.reactivewebapi.service.InvoiceService;
 import io.reactivex.Observable;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Autowired
     ConfigurationService configurationService;
 
+    @Autowired
+    InvoiceServiceApiErrorHandler invoiceServiceApiErrorHandler;
 
     @Override
     public Observable<InvoiceResponseDTO> getInvoiceDetails(Long itemId) {
@@ -32,22 +34,16 @@ public class InvoiceServiceImpl implements InvoiceService {
         ObservableOnSubscribe<InvoiceResponseDTO> source = emitter -> {
 
             ResponseEntity<InvoiceResponseDTO> invoiceResponseDTO = restTemplate.getForEntity(
-                    UriComponentsBuilder
-                            .fromUriString(configurationService.getInvoiceEndPoint())
-                            .toUriString(), InvoiceResponseDTO.class);
+                        UriComponentsBuilder.fromUriString(configurationService.getInvoiceEndPoint()).toUriString(),
+                        InvoiceResponseDTO.class);
 
             emitter.onNext(invoiceResponseDTO.getBody());
             emitter.onComplete();
         };
 
         return Observable.<InvoiceResponseDTO>create(source)
-                .doOnNext(c -> log.info("Invoice details were retrieved successfully."))
-                .onErrorReturn(new Function<Throwable, InvoiceResponseDTO>() {
-                    @Override
-                    public InvoiceResponseDTO apply(Throwable throwable) {
-                        return new InvoiceResponseDTO();
-                    }
-                })
+                .doOnNext(c -> log.info("Invoice details were retrieved successfully. item id - {} ", c.getId()))
+                .onErrorReturn(invoiceServiceApiErrorHandler)
                 .subscribeOn(Schedulers.io());
 
 

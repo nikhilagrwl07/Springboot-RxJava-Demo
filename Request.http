@@ -1,0 +1,38 @@
+### GET request to fetch all books
+GET http://localhost:8080/v1/books
+Content-Type: application/json
+
+### GET request to fetch books with limit and page
+GET http://localhost:8080/v1/books?limit=1&page=1
+Content-Type: application/json
+
+### POST request to save one book
+POST http://localhost:8080/v1/books
+Content-Type: application/json
+
+{
+  "title": "Title 1",
+  "isbn": "code1",
+  "authorId": 1,
+  "price": 10.99
+}
+
+### POST request to save one author
+POST http://localhost:8080/v1/authors
+Content-Type: application/json
+
+{
+  "name": "name1"
+}
+
+### PUT request to update one author
+PUT http://localhost:8080/v1/books?bookId=1
+Content-Type: application/json
+
+{
+  "title": "Title 1",
+  "isbn": "isbnNewAgain2"
+}
+
+###
+

@@ -33,12 +33,16 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         ObservableOnSubscribe<InvoiceResponseDTO> source = emitter -> {
 
+            long startTime = System.currentTimeMillis();
             ResponseEntity<InvoiceResponseDTO> invoiceResponseDTO = restTemplate.getForEntity(
                         UriComponentsBuilder.fromUriString(configurationService.getInvoiceEndPoint()).toUriString(),
                         InvoiceResponseDTO.class);
 
             emitter.onNext(invoiceResponseDTO.getBody());
             emitter.onComplete();
+            long endTime = System.currentTimeMillis();
+            long executeTime = endTime - startTime;
+            log.info("Response time of InvoiceService : {} milliseconds", executeTime);
         };
 
         return Observable.<InvoiceResponseDTO>create(source)

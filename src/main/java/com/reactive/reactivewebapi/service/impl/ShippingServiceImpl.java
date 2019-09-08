@@ -31,6 +31,7 @@ public class ShippingServiceImpl implements ShippingService {
 
         ObservableOnSubscribe<ShippingResponseDTO> source = channel -> {
 
+            long startTime = System.currentTimeMillis();
             ShippingResponseDTO shippingResponseDTO = restTemplate.getForEntity(
                     UriComponentsBuilder
                             .fromUriString(configurationService.getShippingEndPoint())
@@ -39,6 +40,10 @@ public class ShippingServiceImpl implements ShippingService {
 
             channel.onNext(shippingResponseDTO);
             channel.onComplete();
+
+            long endTime = System.currentTimeMillis();
+            long executeTime = endTime - startTime;
+            log.info("Response time of ShippingService : {} milliseconds", executeTime);
         };
 
         return Observable.<ShippingResponseDTO>create(source)
@@ -48,6 +53,3 @@ public class ShippingServiceImpl implements ShippingService {
 
     }
 }
-
-
-//log.info("Observer 1 : {} on {}",  shippingResponseDTO.getId(), LocalTime.now()));

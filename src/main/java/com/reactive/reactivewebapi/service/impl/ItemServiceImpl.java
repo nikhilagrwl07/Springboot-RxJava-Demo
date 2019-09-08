@@ -35,6 +35,7 @@ public class ItemServiceImpl implements ItemService {
             @Override
             public void subscribe(ObservableEmitter<ItemResponseDTO> emitter) throws Exception {
 
+                long startTime = System.currentTimeMillis();
                 ItemResponseDTO itemResponseDTO = restTemplate.getForEntity(
                         UriComponentsBuilder
                                 .fromUriString(configurationService.getItemEndPoint())
@@ -42,6 +43,10 @@ public class ItemServiceImpl implements ItemService {
 
                 emitter.onNext(itemResponseDTO);
                 emitter.onComplete();
+
+                long endTime = System.currentTimeMillis();
+                long executeTime = endTime - startTime;
+                log.info("Response time of ItemService : {} milliseconds", executeTime);
             }
         };
 

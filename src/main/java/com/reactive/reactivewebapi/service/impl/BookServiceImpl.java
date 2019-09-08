@@ -11,6 +11,7 @@ import com.reactive.reactivewebapi.entity.Book;
 import com.reactive.reactivewebapi.exception.AuthorNotFoundException;
 import com.reactive.reactivewebapi.exception.BookNotFoundException;
 import com.reactive.reactivewebapi.respository.AuthorRepository;
+import com.reactive.reactivewebapi.respository.BookReactiveRepository;
 import com.reactive.reactivewebapi.respository.BookRepository;
 import com.reactive.reactivewebapi.service.BookService;
 import com.reactive.reactivewebapi.service.InvoiceService;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,9 @@ public class BookServiceImpl implements BookService {
     @Autowired
     InvoiceService invoiceService;
 
+    @Autowired
+    BookReactiveRepository bookReactiveRepository;
+
     @Override
     public Single<Long> addBook(AddBookWebRequest addBookWebRequest) {
         return Single.create(emitter -> {
@@ -70,6 +75,23 @@ public class BookServiceImpl implements BookService {
             }
         });
     }
+
+    @Override
+    public Flux<ItemDTO> getAllBooksUsingFlux(int limit, int page, boolean shippingInfo, boolean invoiceInfo) {
+
+        long startTime = System.currentTimeMillis();
+        Flux<Book> booksFlux = bookReactiveRepository.findAll(PageRequest.of(page, limit));
+
+        return booksFlux
+                .map(book -> {
+                    ItemDTO itemDTO = extractItemDetails(shippingInfo, invoiceInfo, book);
+                    long endTime = System.currentTimeMillis();
+                    long executeTime = endTime - startTime;
+                    log.info("Request take time: {} milliseconds", executeTime);
+                    return itemDTO;
+                });
+    }
+
 
     @Override
     public Single<List<ItemDTO>> getAllBooks(int limit, int page, boolean shippingInfo, boolean invoiceInfo) {
